@@ -1,14 +1,18 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <history>
-   <processor signature="arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -g -nostartfiles -Map=smart_alcometer.map -O0 --gc-sections -LC:\CooCox\CoIDE\configuration\ProgramData\smart_alcometer -TC:\CooCox\CoIDE\configuration\ProgramData\smart_alcometer/arm-gcc-link.ld -g">
-      <target file="smart_alcometer.elf" lastModified="15bea27fb0c">
-         <source file="..\obj\startup_stm32f4xx.o" lastModified="15bea27f61e"/>
-         <source file="..\obj\main.o" lastModified="15bea27f697"/>
-         <source file="..\obj\stm32f4xx_rcc.o" lastModified="15bea27f714"/>
-         <source file="..\obj\stm32f4xx_gpio.o" lastModified="15bea27f777"/>
-         <source file="..\obj\system_stm32f4xx.o" lastModified="15bea27f7e2"/>
-         <source file="..\obj\lcd_5110.o" lastModified="15bea27f856"/>
-         <source file="..\obj\stm32f4xx_spi.o" lastModified="15bea27f8c9"/>
+   <processor signature="arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -g -nostartfiles -Map=smart_alcometer.map -O0 --gc-sections -lm -lgcc -lc -LC:\CooCox\CoIDE\configuration\ProgramData\smart_alcometer -TC:\CooCox\CoIDE\configuration\ProgramData\smart_alcometer/arm-gcc-link.ld -g">
+      <target file="smart_alcometer.elf" lastModified="15e49a26af7">
+         <source file="..\obj\startup_stm32f4xx.o" lastModified="15e442b9989"/>
+         <source file="..\obj\main.o" lastModified="15e4994751f"/>
+         <source file="..\obj\stm32f4xx_rcc.o" lastModified="15e442b9a63"/>
+         <source file="..\obj\stm32f4xx_adc.o" lastModified="15e442b9ad4"/>
+         <source file="..\obj\helperFunctionsLib.o" lastModified="15e49a268ee"/>
+         <source file="..\obj\stm32f4xx_gpio.o" lastModified="15e442b9c42"/>
+         <source file="..\obj\system_stm32f4xx.o" lastModified="15e442b9c97"/>
+         <source file="..\obj\syscalls.o" lastModified="15e442b9cef"/>
+         <source file="..\obj\lcd_5110.o" lastModified="15e44b48fa1"/>
+         <source file="..\obj\stm32f4xx_spi.o" lastModified="15e442b9db9"/>
+         <source file="..\obj\stm32f4xx_tim.o" lastModified="15e442b9e59"/>
       </target>
    </processor>
 </history>
