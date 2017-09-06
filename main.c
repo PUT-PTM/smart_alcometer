@@ -4,6 +4,198 @@
 #include "helperFunctionsLib.h"
 #include <stdio.h>
 
+
+
+
+/* DANIEL FUNCTIONS */
+/* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx_conf.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_syscfg.h" //odpowiedzialna za zdefiniowanie nazw pinów dla kontrolera przerwañ
+#include "stm32f4xx_adc.h"
+#include "math.h"
+/* Calibration define ------------------------------------------------------------*/
+#define RL_VALUE_MQ3                 (100.0)  //define the load resistance on the board, in kilo ohms
+#define RO_CLEAN_AIR_FACTOR_MQ3      (60.314) //RO_CLEAR_AIR_FACTOR=(Sensor resistance in clean air)/RO,
+                                                      //which is derived from the chart in datasheet
+#define CALIBARAION_SAMPLE_TIMES     (5.0)    //define how many samples you are going to take in the calibration phase
+#define CALIBRATION_SAMPLE_INTERVAL  (500)   //define the time interal(in milisecond) between each samples in the
+                                                     //cablibration phase
+#define READ_SAMPLE_INTERVAL         (50)    //define how many samples you are going to take in normal operation
+#define READ_SAMPLE_TIMES            (5.0)     //define the time interal(in milisecond) between each samples in
+                                                     //normal operation
+/*****************************Globals***********************************************/
+float ADC_Result = 0;
+float Ro = 10;
+float mgL;
+/*******************************************************************************
+ *
+ */
+//void ADCInit()
+//{
+//	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA , ENABLE); // zegar dla portu GPIO z którego wykorzystany zostanie pin jako wejœcie ADC (PA1)
+//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE); // zegar dla modu³u ADC1
+//
+//	GPIO_InitTypeDef GPIO_InitStructure;
+//	//inicjalizacja wejœcia ADC
+//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
+//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+//	GPIO_Init(GPIOA, &GPIO_InitStructure);
+//
+//	ADC_CommonInitTypeDef ADC_CommonInitStructure;
+//	// niezale¿ny tryb pracy przetworników
+//	ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
+//	// zegar g³ówny podzielony przez 2
+//	ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
+//	// opcja istotna tylko dla trybu multi ADC
+//	ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+//	// czas przerwy pomiêdzy kolejnymi konwersjami
+//	ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
+//	ADC_CommonInit(&ADC_CommonInitStructure);
+//
+//
+//	ADC_InitTypeDef ADC_InitStructure;
+//	//ustawienie rozdzielczoœci przetwornika na maksymaln¹ (12 bitów)
+//	ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+//	//wy³¹czenie trybu skanowania (odczytywaæ bêdziemy jedno wejœcie ADC
+//	//w trybie skanowania automatycznie wykonywana jest konwersja na wielu //wejœciach/kana³ach)
+//	ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+//	//w³¹czenie ci¹g³ego trybu pracy
+//	ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
+//	//wy³¹czenie zewnêtrznego wyzwalania
+//	//konwersja mo¿e byæ wyzwalana timerem, stanem wejœcia itd. (szczegó³y w //dokumentacji)
+//	ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+//	ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+//	//wartoœæ binarna wyniku bêdzie podawana z wyrównaniem do prawej
+//	//funkcja do odczytu stanu przetwornika ADC zwraca wartoœæ 16-bitow¹
+//	//dla przyk³adu, wartoœæ 0xFF wyrównana w prawo to 0x00FF, w lewo 0x0FF0
+//	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+//	//liczba konwersji równa 1, bo 1 kana³
+//	ADC_InitStructure.ADC_NbrOfConversion = 1;
+//	// zapisz wype³nion¹ strukturê do rejestrów przetwornika numer 1
+//	ADC_Init(ADC1, &ADC_InitStructure);
+//
+//	/* KONFIGURACJA KANALOW ADC	*/
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 1, ADC_SampleTime_84Cycles);
+//
+//	/*-------------------------*/
+//
+//	ADC_Cmd(ADC1, ENABLE);
+//}
+/****************** Delay ****************************************
+Input:   ms - number of milliseconds
+Output:  delay
+************************************************************************************/
+void delay(uint32_t ms)
+{
+	uint32_t iter = 0;
+	uint32_t sysTime;
+	sysTime = ms*14000;
+
+	for (iter=0;iter<sysTime;iter++);
+}
+
+//void diodeDiscoveryInit()
+//{
+//	/* GPIOD Periph clock enable */
+//	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+//
+//	GPIO_InitTypeDef  GPIO_InitStructure;
+//	/* Configure PD12(GREEN), PD13(ORANGE), PD14(RED) and PD15(BLUE) in output pushpull mode */
+//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
+//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+//	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+//	GPIO_Init(GPIOD, &GPIO_InitStructure);
+//}
+
+float analogRead()
+{
+	float ADC_Result = 0;
+	float MQResistance;
+
+	/*Odczyt wartoœci poprzez odpytywanie flagi zakoñczenia konwersji: */
+	ADC_SoftwareStartConv(ADC1);
+	while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
+	ADC_Result = ADC_GetConversionValue(ADC1);
+	/*------------------------------------------------------------*/
+	//ADCvolt = (ADC_Result*4.95)/4095;	// 4095 BO 12 BIT ROZDZIELCZOSC ADC(NIE ZMIENIAC!!)
+
+	MQResistance = ( ((double)RL_VALUE_MQ3*(4095-ADC_Result)/ADC_Result));
+
+	return MQResistance;
+}
+/*******************************************************************************
+* OTHER FUNCTIONS
+*******************************************************************************/
+/***************************** MQCalibration ****************************************
+Input:   None
+Output:  Ro of the sensor
+Remarks: This function assumes that the sensor is in clean air. It use
+         MQResistanceCalculation to calculates the sensor resistance in clean air
+         and then divides it with RO_CLEAN_AIR_FACTOR. RO_CLEAN_AIR_FACTOR is about
+         10, which differs slightly between different sensors.
+************************************************************************************/
+float MQCalibration()
+{
+	uint32_t i;
+	float RS_AIR_val=0;
+	float r0;
+
+	for (i=0;i<CALIBARAION_SAMPLE_TIMES;i++)
+	{
+		RS_AIR_val += analogRead();
+		delay(CALIBRATION_SAMPLE_INTERVAL);
+	}
+
+	RS_AIR_val = RS_AIR_val/CALIBARAION_SAMPLE_TIMES;              //calculate the average value
+
+	r0 = RS_AIR_val/RO_CLEAN_AIR_FACTOR_MQ3;                      //RS_AIR_val divided by RO_CLEAN_AIR_FACTOR yields the Ro
+                                                         	 	//according to the chart in the datasheet
+	return r0;
+}
+/*****************************  MQRead *********************************************
+Input:   None
+Output:  Rs of the sensor
+Remarks: This function use MQResistanceCalculation to calculate the sensor resistance (Rs).
+         The Rs changes as the sensor is in the different concentration of the target
+         gas. The sample times and the time interval between samples could be configured
+         by changing the definition of the macros.
+************************************************************************************/
+float MQRead()
+{
+	uint32_t i;
+	float rs=0;
+
+	for (i=0;i<READ_SAMPLE_TIMES;i++)
+	{
+		rs += analogRead();
+		delay(READ_SAMPLE_INTERVAL);
+	}
+	rs = rs/READ_SAMPLE_TIMES;
+
+	return rs;
+}
+/*****************************  MQGetGasPercentage **********************************
+Input:   rs_ro_ratio - Rs divided by Ro
+Output:  mg/L of the target gas
+Remarks: This function uses different equations representing curves of each gas to
+         calculate the mg/L (milligrams per liter) of the target gas.
+************************************************************************************/
+float MQGetGasPercentage(float rs_ro_ratio)
+{
+    return (pow(10,((-1.487*(log10(rs_ro_ratio))) - 0.401)));
+}
+
+//**********************************************************
+//-----------------------------------------------------------
+//**********************************************************
+
+
+
 //const unsigned char probaHours [] = {
 //0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 //0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00,
@@ -114,9 +306,24 @@ const unsigned char logo_mini_mono [] = {
 
 
 
+float printFloatAdcValue(){
 
+	LCD5110_set_XY(4,4);
+	char buffer[64];
+	mgL = MQGetGasPercentage(analogRead()/Ro);//	(mg/L)
+//	if((mgL*2.1) > 8.6)
+//		mgL = 4.09;
+	int ret = snprintf(buffer, sizeof buffer, "%.5f", mgL*2.1);
+
+	LCD5110_write_string(buffer);
+	//LCD5110_write_string("pizda");
+	float floatValuePerMil = (roundf(mgL*100) / 100)*2.1;
+
+	return floatValuePerMil;
+}
 
 //float adc1Value;
+int afterCalibration = 0;
 float alcocholLevelPerMil = 0;
 int main(void)
 {
@@ -125,20 +332,10 @@ int main(void)
   // Initialization of Nokia 5110 display
   LCD5110_init();
   //*******************************
-
-  //GPIO_Initialization for ADC
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA , ENABLE);
-
-  GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  //*******************
-
+  ADCInit();
 
   //Initialization of GPIO ports
-
+  	GPIO_InitTypeDef GPIO_InitStructure;
   	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
   	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
   	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -155,7 +352,8 @@ int main(void)
 
 
   setTimer();
-  adc1Init();
+  //adc1Init();
+
 
 
 
@@ -191,38 +389,29 @@ int main(void)
 		  break;
 	  }
   }
+  if(afterCalibration == 0){
+	  Ro = MQCalibration();	//kalibracja
+	  afterCalibration = 69;
+  }
   waitingScreenShow();
 
-//int pushed = 0;
+
 counter = 0;
-int flag = 0;
+
 
 for(;;){
 	if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) == 0){
+		for(;;){
+
 		bloodAlcLevelShow();
 
 		for(;;){
-//  if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) == 0){
-//	  if(pushed == 0){
-//		  LCD5110_clear();
-//  	  	  bloodAlcLevelShow();
-//  	  	  pushed+=1;
-//	  }
-//
-//  	  while(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) == 0){
-//	  	  printAdcValue();
-//
-//
-//
-//
-//  	  }
-//  }
+
 
 			if(counter < 10)
 			  {
-			//	  unsigned int counter = TIM3->CNT;
-				  //printAdcValue();
-				  alcocholLevelPerMil = printFloatAdcValue();  //W alcoholLevelPerMil znajduje siê liczba promil
+
+				  alcocholLevelPerMil = printFloatAdcValue(Ro);  //W alcoholLevelPerMil znajduje siê liczba promil
 				  if(TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 				  {
 
@@ -241,12 +430,16 @@ for(;;){
 				counter++;
 			}
 
+			//mgL = MQGetGasPercentage(MQRead()/Ro);//	(mg/L)
 
-
-
+			if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3) == 0){
+				counter = 0;
+				break;
+		}
 
 
 		}
+	}
 	}
 
 }
